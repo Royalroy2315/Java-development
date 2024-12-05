@@ -1,0 +1,90 @@
+//JAVA CODE
+import java.util.*;
+
+public class OnlineExamination {
+
+    // Sample user data
+    private static final Map<String, String> users = new HashMap<>();
+    private static String currentUser = null;
+    private static final Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        // Adding a default user
+        users.put("user", "password");
+
+        while (true) {
+            System.out.println("\nWelcome to the Online Examination System");
+            System.out.println("1. Login");
+            System.out.println("2. Exit");
+            System.out.print("Select an option: ");
+            int choice = scanner.nextInt();
+
+            if (choice == 1) {
+                login();
+            } else if (choice == 2) {
+                System.out.println("Thank you for using the system. Goodbye!");
+                break;
+            } else {
+                System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static void login() {
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        if (users.containsKey(username) && users.get(username).equals(password)) {
+            currentUser = username;
+            System.out.println("Login successful!");
+            dashboard();
+        } else {
+            System.out.println("Invalid credentials. Try again.");
+        }
+    }
+
+    private static void dashboard() {
+        while (true) {
+            System.out.println("\nDashboard");
+            System.out.println("1. Update Profile and Password");
+            System.out.println("2. Take Exam");
+            System.out.println("3. Logout");
+            System.out.print("Select an option: ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    updateProfile();
+                    break;
+                case 2:
+                    takeExam();
+                    break;
+                case 3:
+                    logout();
+                    return;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static void updateProfile() {
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter new password: ");
+        String newPassword = scanner.nextLine();
+        users.put(currentUser, newPassword);
+        System.out.println("Password updated successfully!");
+    }
+
+    private static void takeExam() {
+        System.out.println("\nExam Instructions:");
+        System.out.println("1. You will have 2 minutes to complete the exam.");
+        System.out.println("2. The exam will auto-submit after the timer ends.\n");
+
+        String[] questions = {
+            "What is the capital of France?\n1. Berlin\n2. Paris\n3. Madrid\n4. Rome",
+            "Which planet is known as the Red Planet?\n1. Earth\n2. Mars\n3. Jupiter\n4. Saturn",
+            "What is 2 + 2?\n
