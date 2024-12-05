@@ -1,0 +1,169 @@
+//JAVA CODE
+import java.sql.*;
+import java.util.Scanner;
+
+public class DigitalLibraryManagement {
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/library_management";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "password";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Welcome to Digital Library Management System!");
+        System.out.println("Are you an Admin or a User? (Enter 'admin' or 'user')");
+        String role = scanner.nextLine().toLowerCase();
+
+        if ("admin".equals(role)) {
+            adminMenu(scanner);
+        } else if ("user".equals(role)) {
+            userMenu(scanner);
+        } else {
+            System.out.println("Invalid role. Exiting.");
+        }
+
+        scanner.close();
+    }
+
+    private static void adminMenu(Scanner scanner) {
+        while (true) {
+            System.out.println("\nAdmin Menu:");
+            System.out.println("1. Add Book");
+            System.out.println("2. Delete Book");
+            System.out.println("3. View All Books");
+            System.out.println("4. Exit");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1 -> addBook(scanner);
+                case 2 -> deleteBook(scanner);
+                case 3 -> viewBooks();
+                case 4 -> {
+                    System.out.println("Exiting Admin Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static void userMenu(Scanner scanner) {
+        while (true) {
+            System.out.println("\nUser Menu:");
+            System.out.println("1. View Books");
+            System.out.println("2. Search Book");
+            System.out.println("3. Exit");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1 -> viewBooks();
+                case 2 -> searchBook(scanner);
+                case 3 -> {
+                    System.out.println("Exiting User Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static void addBook(Scanner scanner) {
+        System.out.println("Enter book title:");
+        String title = scanner.nextLine();
+        System.out.println("Enter book author:");
+        String author = scanner.nextLine();
+        System.out.println("Enter book category:");
+        String category = scanner.nextLine();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO books (title, author, category) VALUES (?, ?, ?)")) {
+            stmt.setString(1, title);
+            stmt.setString(2, author);
+            stmt.setString(3, category);
+            stmt.executeUpdate();
+            System.out.println("Book added successfully.");
+        } catch (SQLException e) {
+            System.out.println("Error adding book: " + e.getMessage());
+        }
+    }
+
+    private static void deleteBook(Scanner scanner) {
+        System.out.println("Enter book ID to delete:");
+        int bookId = scanner.nextInt();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("DELETE FROM books WHERE id = ?")) {
+            stmt.setInt(1, bookId);
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Book deleted successfully.");
+            } else {
+                System.out.println("Book not found.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error deleting book: " + e.getMessage());
+        }
+    }
+
+    private static void viewBooks() {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM books")) {
+
+            System.out.println("\nBooks in the Library:");
+            while (rs.next()) {
+                System.out.printf("ID: %d, Title: %s, Author: %s, Category: %s, Available: %b%n",
+                        rs.getInt("id"), rs.getString("title"), rs.getString("author"),
+                        rs.getString("category"), rs.getBoolean("available"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving books: " + e.getMessage());
+        }
+    }
+
+    private static void searchBook(Scanner scanner) {
+        System.out.println("Enter book title to search:");
+        String title = scanner.nextLine();
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM books WHERE title LIKE ?")) {
+            stmt.setString(1, "%" + title + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.isBeforeFirst()) {
+                    System.out.println("No books found with the given title.");
+                } else {
+                    System.out.println("\nSearch Results:");
+                    while (rs.next()) {
+                        System.out.printf("ID: %d, Title: %s, Author: %s, Category: %s, Available: %b%n",
+                                rs.getInt("id"), rs.getString("title"), rs.getString("author"),
+                                rs.getString("category"), rs.getBoolean("available"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error searching book: " + e.getMessage());
+        }
+    }
+}
+//Books Table:
+CREATE TABLE books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    available BOOLEAN DEFAULT TRUE
+);
+//Users Table:
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'user') NOT NULL
+);
+
